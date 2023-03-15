@@ -1,65 +1,16 @@
 import csv
-import requests
 import multiprocessing as mp
 from tqdm import tqdm
+from utils import *
 
 fp = open('results.csv', 'w')
-writer = csv.DictWriter(fp, fieldnames=[
-    'accession',
-    'from_dataset',
-    'cell_line',
-    'target',
-    'assay_term_name',
-    'lab',
-    'date_created',
-    'file_format',
-    'file_size_MB',
-    'mapped_read_length',
-    'mapped_run_type',
-    'assembly',
-    'download_link',
-    's3_uri'
-])
+writer = csv.DictWriter(fp, fieldnames=get_metadata({}).keys())
 writer.writeheader()
 fp.flush()
 
-def read_inputs():
-    with open('./targets.txt') as f:
-        targets = f.read().splitlines()
-    with open('./celllines.txt') as f:
-        cell_lines = f.read().splitlines()
-    return targets, cell_lines
-
-def crawl_experiments(target, cell_line):
-    url = 'https://www.encodeproject.org/search/?type=Experiment&target.label='+target+'&biosample_ontology.term_name='+cell_line+'&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&format=json'
-    response = requests.get(url)
-    result = response.json()
-    return result
-
-def crawl_file(id):
-    url = 'https://www.encodeproject.org/'+id+'/?format=json'
-    response = requests.get(url)
-    result = response.json()
-    return result
-
 def record_file(id):
     file = crawl_file(id)
-    record = {
-        'accession': file.get('accession', None),
-        'from_dataset': file.get('dataset', None),
-        'cell_line': file.get('biosample_ontology', None)['term_name'],
-        'target': file.get('target', None)['label'],
-        'assay_term_name': file.get('assay_term_name', None),
-        'lab': file.get('lab', None)['title'],
-        'date_created': file.get('date_created', None)[:10],
-        'file_format': file.get('file_format', None),
-        'file_size_MB': round(file.get('file_size', 0)/(1024*1024)),
-        'mapped_read_length': file.get('mapped_read_length', None),
-        'mapped_run_type': file.get('mapped_run_type', None),
-        'assembly': file.get('assembly', None),
-        'download_link': file.get('azure_uri', None),
-        's3_uri': file.get('s3_uri', None)
-    }
+    record = get_metadata(file)
     writer.writerow(record)
     fp.flush()
 
