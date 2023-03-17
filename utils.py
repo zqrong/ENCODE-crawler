@@ -39,6 +39,7 @@ def get_metadata(file):
         'file_format': file.get('file_format', None),
         'file_size_MB': round(file.get('file_size', 0)/(1024*1024)),
         'run_type': file.get('run_type', None),
+        'paired_end': file.get('paired_end', None),
         'read_length': (file.get('read_length', None)),
         'biological_replicates': (file.get('biological_replicates', None)),
         'technical_replicates': (file.get('technical_replicates', None)),
